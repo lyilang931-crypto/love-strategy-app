@@ -11,12 +11,19 @@ interface BeforeInstallPromptEvent extends Event {
 
 type BannerType = 'ios' | 'android' | null
 
+
+
 const DISMISSED_KEY = 'pwa_install_dismissed'
 const DISMISSED_EXPIRY_DAYS = 7  // 7日後に再表示
 
 function isIOS(): boolean {
   if (typeof navigator === 'undefined') return false
   return /iPhone|iPad|iPod/.test(navigator.userAgent)
+}
+
+function isLINEBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /Line\//i.test(navigator.userAgent)
 }
 
 function isInStandaloneMode(): boolean {
@@ -45,10 +52,13 @@ export default function InstallBanner() {
   const [bannerType, setBannerType] = useState<BannerType>(null)
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [installing, setInstalling] = useState(false)
+  const [isLine, setIsLine] = useState(false)
 
   useEffect(() => {
     // 既にインストール済み / 最近閉じた場合は表示しない
     if (isInStandaloneMode() || isDismissedRecently()) return
+
+    setIsLine(isLINEBrowser())
 
     // Android: beforeinstallprompt イベントをキャッチ
     const handler = (e: Event) => {
@@ -140,6 +150,20 @@ export default function InstallBanner() {
             {/* iOS 手順 */}
             <div className="mt-4 bg-navy-800/60 rounded-xl p-3 space-y-2">
               <p className="text-gold-400 text-xs font-bold mb-2">📲 インストール手順</p>
+
+              {/* LINE ブラウザ向け注意書き（常時表示、LINE環境では強調） */}
+              <div className={`flex items-start gap-2 rounded-lg px-2.5 py-2 mb-1 ${
+                isLine
+                  ? 'bg-gold-400/15 border border-gold-400/40'
+                  : 'bg-white/5'
+              }`}>
+                <span className="text-base flex-shrink-0 mt-0.5">💬</span>
+                <p className={`text-xs leading-relaxed ${isLine ? 'text-gold-300' : 'text-gray-400'}`}>
+                  <span className="font-bold">LINEから開いた場合：</span>
+                  右下の <span className="inline-flex items-center px-1 py-0.5 rounded bg-white/10 text-white font-bold">…</span> →「<span className="font-bold text-white">ブラウザで開く</span>」を先にタップしてください
+                </p>
+              </div>
+
               <div className="flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-gold-400/20 text-gold-400 text-xs flex items-center justify-center font-bold flex-shrink-0">1</span>
                 <p className="text-gray-300 text-xs">
