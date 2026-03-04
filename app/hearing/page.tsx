@@ -7,6 +7,7 @@ import type { HearingData } from '@/lib/types'
 
 // ── Initial state ──
 const INIT: HearingData = {
+  nickname: '',
   age: '', gender: '', occupation: '',
   hobbies: [], weekendStyle: '', extrovertLevel: 5,
   meetingPlaces: [], snsUsage: '', workMeetings: '',
@@ -97,6 +98,35 @@ function LuxurySlider({ value, min, max, onChange, label }: { value: number; min
 function Step1({ data, set }: { data: HearingData; set: (d: Partial<HearingData>) => void }) {
   return (
     <div className="space-y-6">
+      {/* ニックネーム */}
+      <div>
+        <label className="block text-sm text-gray-300 mb-1">
+          ニックネーム <span className="text-gold-400 text-xs ml-1">※アプリ内やリマインダーで使います</span>
+        </label>
+        <div className="relative">
+          <input
+            type="text"
+            value={data.nickname}
+            onChange={(e) => set({ nickname: e.target.value.slice(0, 20) })}
+            placeholder="例：タロウ、ゆかり、Yuki など"
+            maxLength={20}
+            className="input-luxury rounded-xl px-4 py-3 text-sm pr-14"
+          />
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500">
+            {data.nickname.length}/20
+          </span>
+        </div>
+        {data.nickname.trim() && (
+          <motion.p
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-1.5 text-xs text-gold-400"
+          >
+            こんにちは、{data.nickname.trim()}さん！一緒に理想の恋愛を目指しましょう 💕
+          </motion.p>
+        )}
+      </div>
+
       <div>
         <label className="block text-sm text-gray-300 mb-2">年齢</label>
         <select
@@ -343,19 +373,51 @@ function Step6({ data, set }: { data: HearingData; set: (d: Partial<HearingData>
   )
 }
 
+// ── ユーザーID を取得（なければ生成して保存）──
+function getUserId(): string {
+  let id = localStorage.getItem('user_id')
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem('user_id', id)
+  }
+  return id
+}
+
 // ── Main Component ──
 
 export default function HearingPage() {
   const [step, setStep] = useState(1)
   const [data, setData] = useState<HearingData>(INIT)
-  const [dir, setDir] = useState(1) // 1 = forward, -1 = back
+  const [dir, setDir] = useState(1)
   const router = useRouter()
 
-  const setPartial = (d: Partial<HearingData>) => setData((prev) => ({ ...prev, ...d }))
+  // localStorage から既存データを復元
+  useEffect(() => {
+    const saved = localStorage.getItem('hearing_data')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as HearingData
+        setData(parsed)
+      } catch { /* ignore */ }
+    }
+    const nick = localStorage.getItem('user_nickname')
+    if (nick) setData((prev) => ({ ...prev, nickname: nick }))
+  }, [])
+
+  const setPartial = (d: Partial<HearingData>) => {
+    setData((prev) => {
+      const next = { ...prev, ...d }
+      // nickname はリアルタイムで localStorage にも保存
+      if ('nickname' in d && d.nickname !== undefined) {
+        localStorage.setItem('user_nickname', d.nickname)
+      }
+      return next
+    })
+  }
 
   const canNext = () => {
     switch (step) {
-      case 1: return data.age && data.gender && data.occupation
+      case 1: return data.nickname.trim() && data.age && data.gender && data.occupation
       case 2: return data.hobbies.length > 0 && data.weekendStyle
       case 3: return data.meetingPlaces.length > 0 && data.snsUsage
       case 4: return data.relationshipExperience && data.lastRelationshipTime
@@ -365,10 +427,19 @@ export default function HearingPage() {
     }
   }
 
-  const goNext = () => {
+  const goNext = async () => {
     if (!canNext()) return
     if (step === 6) {
       localStorage.setItem('hearing_data', JSON.stringify(data))
+      // Supabase にニックネームを保存（非同期・失敗しても続行）
+      try {
+        const userId = getUserId()
+        await fetch('/api/user/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId, nickname: data.nickname.trim() }),
+        })
+      } catch { /* ignore: Supabase 未設定でも進む */ }
       router.push('/diagnosis')
       return
     }

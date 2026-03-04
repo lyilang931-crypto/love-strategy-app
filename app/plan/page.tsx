@@ -26,6 +26,7 @@ export default function PlanPage() {
   const [checks, setChecks] = useState<CheckState>({})
   const [activeWeek, setActiveWeek] = useState(1)
   const [loaded, setLoaded] = useState(false)
+  const [nickname, setNickname] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function PlanPage() {
     if (!planRaw) { router.push('/strategy'); return }
     setPlan(JSON.parse(planRaw))
     if (checksRaw) setChecks(JSON.parse(checksRaw))
+    setNickname(localStorage.getItem('user_nickname') || '')
     setLoaded(true)
   }, [router])
 
@@ -79,6 +81,11 @@ export default function PlanPage() {
               進捗記録 →
             </button>
           </div>
+          {nickname && (
+            <p className="text-xs text-gold-400/70 text-center mt-2">
+              こんにちは、{nickname}さん 💕
+            </p>
+          )}
         </div>
       </div>
 

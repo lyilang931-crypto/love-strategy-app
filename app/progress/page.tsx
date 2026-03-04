@@ -31,6 +31,7 @@ export default function ProgressPage() {
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ week: 1, mood: 3, notes: '', completedActions: [] as string[] })
   const [planChecks, setPlanChecks] = useState<Record<string, boolean>>({})
+  const [nickname, setNickname] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -40,6 +41,7 @@ export default function ProgressPage() {
     if (dr) setDiagnosis(JSON.parse(dr))
     if (er) setEntries(JSON.parse(er))
     if (pc) setPlanChecks(JSON.parse(pc))
+    setNickname(localStorage.getItem('user_nickname') || '')
 
     // Auto-detect current week (days since start)
     const startDate = localStorage.getItem('start_date')
@@ -95,12 +97,19 @@ export default function ProgressPage() {
     <main className="min-h-screen bg-[#0A1628] pb-24">
       {/* Header */}
       <div className="glass border-b border-gold-400/10 px-5 py-5 sticky top-0 z-10">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
-          <button onClick={() => router.push('/plan')} className="text-gray-400 hover:text-gold-400 transition-colors text-sm">
-            ← 行動計画
-          </button>
-          <h1 className="text-white font-bold">📊 進捗ダッシュボード</h1>
-          <StreakBadge />
+        <div className="max-w-lg mx-auto">
+          <div className="flex items-center justify-between">
+            <button onClick={() => router.push('/plan')} className="text-gray-400 hover:text-gold-400 transition-colors text-sm">
+              ← 行動計画
+            </button>
+            <h1 className="text-white font-bold">📊 進捗ダッシュボード</h1>
+            <StreakBadge />
+          </div>
+          {nickname && (
+            <p className="text-xs text-gold-400/70 text-center mt-2">
+              {nickname}さんの成長記録 🌟
+            </p>
+          )}
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 export interface HearingData {
   // Step 1 - 基本情報
+  nickname: string
   age: string
   gender: string
   occupation: string

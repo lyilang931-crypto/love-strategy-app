@@ -6,13 +6,21 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
   const rawData = window.atob(base64)
-  // ArrayBuffer を明示することで Uint8Array<ArrayBuffer> 型になる
   const buffer = new ArrayBuffer(rawData.length)
   const outputArray = new Uint8Array(buffer)
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i)
   }
   return outputArray
+}
+
+function getUserId(): string {
+  let id = localStorage.getItem('user_id')
+  if (!id) {
+    id = crypto.randomUUID()
+    localStorage.setItem('user_id', id)
+  }
+  return id
 }
 
 /** 通知権限の現在状態を返す */
@@ -36,7 +44,6 @@ export async function subscribeToPush(): Promise<boolean> {
     const reg = await navigator.serviceWorker.register('/sw.js')
     await navigator.serviceWorker.ready
 
-    // 既存購読を解除してから再購読（VAPID 鍵変更に対応）
     const existing = await reg.pushManager.getSubscription()
     if (existing) await existing.unsubscribe()
 
@@ -45,10 +52,11 @@ export async function subscribeToPush(): Promise<boolean> {
       applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
     })
 
+    // user_id と一緒に送信して Supabase 側でニックネームと紐付ける
     const res = await fetch('/api/push/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(sub),
+      body: JSON.stringify({ subscription: sub, user_id: getUserId() }),
     })
     if (!res.ok) throw new Error('サーバー登録に失敗しました')
 
@@ -70,7 +78,7 @@ export async function unsubscribeFromPush(): Promise<boolean> {
       await fetch('/api/push/unsubscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ endpoint: sub.endpoint }),
+        body: JSON.stringify({ endpoint: sub.endpoint, user_id: getUserId() }),
       })
       await sub.unsubscribe()
     }
