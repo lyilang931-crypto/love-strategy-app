@@ -26,10 +26,17 @@ type UIState =
   | 'enabled'          // 許可済み・登録済み
   | 'disabled'         // 許可済みだが未登録（例: 解除後）
 
+/** LINE ブラウザかどうかを判定 */
+function isLINEBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false
+  return /Line\//i.test(navigator.userAgent)
+}
+
 export default function NotificationButton({ compact = false }: Props) {
   const [uiState, setUIState] = useState<UIState>('loading')
   const [actionLoading, setActionLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [inLINE, setInLINE] = useState(false)
 
   // ── 状態を同期する関数 ──
   const syncState = useCallback(() => {
@@ -50,6 +57,7 @@ export default function NotificationButton({ compact = false }: Props) {
 
   useEffect(() => {
     setMounted(true)
+    setInLINE(isLINEBrowser())
     syncState()
 
     // バックグラウンドから戻ってきたとき（設定アプリから許可変更後）に再チェック
@@ -62,13 +70,37 @@ export default function NotificationButton({ compact = false }: Props) {
 
   // ── アクション: 通知を有効にする ──
   const handleEnable = async () => {
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // iOS PWA 対応: Notification.requestPermission() は
+    // ユーザージェスチャーの「同期コード」内で即座に呼び出す必要がある。
+    // await の後に呼ぶと iOS がユーザージェスチャーとみなさず
+    // 許可ダイアログが表示されない。
+    //
+    // ここで Promise を「起動」だけして変数に保持し、
+    // await は後で行う（非同期処理を一切挟まない）。
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const permPromise: Promise<NotificationPermission> | null =
+      'Notification' in window && Notification.permission === 'default'
+        ? Notification.requestPermission()  // ← 同期コードで即起動
+        : null
+
     setActionLoading(true)
     try {
+      // 許可ダイアログの結果を待つ
+      if (permPromise !== null) {
+        const perm = await permPromise
+        if (perm !== 'granted') {
+          syncState()  // denied に更新して案内を表示
+          return
+        }
+      }
+
+      // 権限取得済み → Service Worker 登録・Push 購読
       const ok = await subscribeToPush()
       if (ok) {
         setUIState('enabled')
       } else {
-        // 失敗した場合は状態を再同期（denied になっている可能性）
+        // SW 登録失敗など → 状態を再確認
         syncState()
       }
     } finally {
@@ -161,12 +193,39 @@ export default function NotificationButton({ compact = false }: Props) {
             <p className="text-gray-300 text-xs leading-relaxed">
               iOSでプッシュ通知を受け取るには、このアプリをホーム画面に追加してください。
             </p>
+
+            {/* LINE ブラウザ向け事前案内 */}
+            {inLINE && (
+              <div className="mt-3 bg-[#00B900]/10 border border-[#00B900]/30 rounded-xl p-3 space-y-1">
+                <p className="text-[#4cd964] text-xs font-bold">💬 LINEから開いている場合</p>
+                <p className="text-gray-300 text-xs">
+                  右下の <span className="text-[#4cd964] font-medium">「…」</span> →
+                  {' '}<span className="text-[#4cd964] font-medium">「ブラウザで開く」</span> →
+                  {' '}Safariで開いてから、以下の手順を実行してください。
+                </p>
+              </div>
+            )}
+
+            {/* ホーム画面追加の手順 */}
             <div className="mt-3 bg-gold-400/8 border border-gold-400/20 rounded-xl p-3 space-y-1.5">
-              <p className="text-gold-400 text-xs font-bold">📋 手順</p>
-              <p className="text-gray-300 text-xs">① Safari 下部の <span className="text-gold-300">共有アイコン</span>（□↑）をタップ</p>
-              <p className="text-gray-300 text-xs">② 「<span className="text-gold-300">ホーム画面に追加</span>」を選択</p>
-              <p className="text-gray-300 text-xs">③ ホーム画面から再度アプリを開く</p>
+              <p className="text-gold-400 text-xs font-bold">📋 ホーム画面への追加手順</p>
+              <p className="text-gray-300 text-xs">
+                ① Safari 下部の <span className="text-gold-300 font-medium">共有アイコン</span>（□↑）をタップ
+              </p>
+              <p className="text-gray-300 text-xs">
+                ② 「<span className="text-gold-300 font-medium">ホーム画面に追加</span>」を選択
+              </p>
+              <p className="text-gray-300 text-xs">
+                ③ ホーム画面のアイコンからアプリを再度開く
+              </p>
             </div>
+
+            {/* LINE でない場合はサブテキストで補足 */}
+            {!inLINE && (
+              <p className="mt-2 text-gray-500 text-xs">
+                ※ LINEから開いている場合は、右下の「…」→「ブラウザで開く」→ Safari で開いてから手順を実行してください。
+              </p>
+            )}
           </div>
         </div>
       </motion.div>

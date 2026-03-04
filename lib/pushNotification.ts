@@ -60,7 +60,13 @@ export function getNotificationPermission(): NotificationPermission | 'unsupport
   return Notification.permission
 }
 
-/** Service Worker を登録して Push 購読を作成し、サーバーへ送信する */
+/** Service Worker を登録して Push 購読を作成し、サーバーへ送信する
+ *
+ * iOS PWA 対応:
+ *   呼び出し元（UI コンポーネント）で Notification.requestPermission() を
+ *   ユーザージェスチャーの同期コード内で先に起動しておくこと。
+ *   既に 'granted' の場合は二重リクエストをスキップする。
+ */
 export async function subscribeToPush(): Promise<boolean> {
   try {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -68,8 +74,11 @@ export async function subscribeToPush(): Promise<boolean> {
       return false
     }
 
-    const permission = await Notification.requestPermission()
-    if (permission !== 'granted') return false
+    // 既に granted なら再リクエスト不要（iOS PWA では UI 側で先に呼んでいる）
+    if (Notification.permission !== 'granted') {
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') return false
+    }
 
     const reg = await navigator.serviceWorker.register('/sw.js')
     await navigator.serviceWorker.ready
