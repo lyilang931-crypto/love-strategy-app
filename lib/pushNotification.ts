@@ -2,11 +2,13 @@
 
 const PUBLIC_VAPID_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
 
-function urlBase64ToUint8Array(base64String: string): Uint8Array {
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
   const rawData = window.atob(base64)
-  const outputArray = new Uint8Array(rawData.length)
+  // ArrayBuffer を明示することで Uint8Array<ArrayBuffer> 型になる
+  const buffer = new ArrayBuffer(rawData.length)
+  const outputArray = new Uint8Array(buffer)
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i)
   }
