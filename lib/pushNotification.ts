@@ -2,6 +2,36 @@
 
 const PUBLIC_VAPID_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
 
+// ── Push 対応状態の詳細判定 ──
+
+export type PushSupportState =
+  | 'supported'      // 対応・利用可
+  | 'ios-safari'     // iOS Safari（非PWA）- PWAインストールが必要
+  | 'unsupported'    // その他の非対応環境
+
+/**
+ * このデバイス・環境での Push 通知対応状況を返す
+ * - 'supported'   : Notification / PushManager / SW すべて利用可
+ * - 'ios-safari'  : iOS Safari のブラウザ（ホーム画面追加が必要）
+ * - 'unsupported' : その他の非対応
+ */
+export function getPushSupportState(): PushSupportState {
+  if (typeof window === 'undefined') return 'unsupported'
+  const ua = navigator.userAgent
+  const isIOS = /iP(hone|od|ad)/i.test(ua)
+  // window.navigator.standalone が true = ホーム画面追加済みPWA
+  const isStandalone = Boolean(
+    (navigator as Navigator & { standalone?: boolean }).standalone
+  )
+  if (isIOS && !isStandalone) return 'ios-safari'
+  if (
+    !('Notification' in window) ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window)
+  ) return 'unsupported'
+  return 'supported'
+}
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')

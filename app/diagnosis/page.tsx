@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { DiagnosisResult } from '@/lib/types'
+import ShareModal from '@/components/ShareModal'
 
 // ── Personality types ──
 const TYPES = {
@@ -195,7 +196,13 @@ export default function DiagnosisPage() {
   const [selected, setSelected] = useState<string | null>(null)
   const [result, setResult] = useState<DiagnosisResult | null>(null)
   const [dir, setDir] = useState(1)
+  const [showShare, setShowShare] = useState(false)
+  const [nickname, setNickname] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    setNickname(localStorage.getItem('user_nickname') || '')
+  }, [])
 
   const choose = (type: string) => setSelected(type)
 
@@ -241,6 +248,9 @@ export default function DiagnosisPage() {
             >
               {result.emoji}
             </motion.div>
+            {nickname && (
+              <p className="text-gold-400/70 text-xs mb-1">{nickname}さんの診断結果</p>
+            )}
             <p className="text-gold-400 text-sm tracking-widest uppercase mb-2">あなたの恋愛タイプは</p>
             <h1 className="text-4xl font-bold text-white mb-1">
               <span className="gold-text">{result.type}</span>
@@ -299,6 +309,19 @@ export default function DiagnosisPage() {
             <p className="text-gray-300 text-sm leading-relaxed">{result.approach}</p>
           </div>
 
+          {/* シェアボタン */}
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2 }}
+            onClick={() => setShowShare(true)}
+            className="w-full mb-4 py-3.5 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 border border-gold-400/40 text-gold-300 hover:bg-gold-400/10 active:scale-95 transition-all"
+          >
+            <span>📤</span>
+            <span>診断結果をシェアする</span>
+            <span className="text-xs text-gold-400/60 ml-1">LINE・X・画像保存</span>
+          </motion.button>
+
           <button
             onClick={goToStrategy}
             className="btn-gold w-full py-4 rounded-2xl text-base font-bold animate-pulse-gold"
@@ -307,6 +330,17 @@ export default function DiagnosisPage() {
           </button>
           <p className="text-center text-gray-500 text-xs mt-3">AIがヒアリング内容と組み合わせて完全個別プランを作成します</p>
         </motion.div>
+
+        {/* シェアモーダル */}
+        <AnimatePresence>
+          {showShare && (
+            <ShareModal
+              result={result}
+              nickname={nickname}
+              onClose={() => setShowShare(false)}
+            />
+          )}
+        </AnimatePresence>
       </main>
     )
   }
