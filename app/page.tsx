@@ -23,10 +23,10 @@ const FEATURES = [
 ]
 
 const STEPS = [
-  { num: '01', title: 'ヒアリング', desc: '6つのテーマで深掘り（約10分）' },
-  { num: '02', title: 'AI性格診断', desc: '12問で恋愛タイプを特定' },
-  { num: '03', title: '戦略生成', desc: 'AIがあなた専用プランを作成' },
-  { num: '04', title: '実践・記録', desc: '週次で進捗を管理しながら前進' },
+  { num: '01', title: 'ヒアリング', desc: '6つのテーマで深掘り（約10分）', href: '/hearing' },
+  { num: '02', title: 'AI性格診断', desc: '12問で恋愛タイプを特定', href: '/diagnosis' },
+  { num: '03', title: '戦略生成', desc: 'AIがあなた専用プランを作成', href: '/strategy' },
+  { num: '04', title: '実践・記録', desc: '週次で進捗を管理しながら前進', href: '/progress' },
 ]
 
 
@@ -225,25 +225,28 @@ export default function LandingPage() {
                 viewport={{ once: true }}
                 custom={i}
                 variants={fadeUp}
-                className="glass rounded-2xl p-6 flex items-center gap-6 card-hover"
               >
-                <div className="flex-shrink-0">
-                  <span
-                    className="text-4xl font-bold font-display"
-                    style={{ color: `rgba(212,175,55,${0.2 + i * 0.2})` }}
-                  >
-                    {s.num}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-1">{s.title}</h3>
-                  <p className="text-gray-400 text-sm">{s.desc}</p>
-                </div>
-                <div className="ml-auto flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full border border-gold-400/30 flex items-center justify-center text-gold-400 text-sm">
-                    →
+                <Link href={s.href}>
+                  <div className="glass rounded-2xl p-6 flex items-center gap-6 card-hover cursor-pointer group">
+                    <div className="flex-shrink-0">
+                      <span
+                        className="text-4xl font-bold font-display"
+                        style={{ color: `rgba(212,175,55,${0.2 + i * 0.2})` }}
+                      >
+                        {s.num}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white mb-1">{s.title}</h3>
+                      <p className="text-gray-400 text-sm">{s.desc}</p>
+                    </div>
+                    <div className="ml-auto flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full border border-gold-400/30 flex items-center justify-center text-gold-400 text-sm group-hover:bg-gold-400/20 group-hover:border-gold-400/60 transition-all">
+                        →
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </motion.div>
             ))}
           </div>
