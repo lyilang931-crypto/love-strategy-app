@@ -79,3 +79,45 @@ export async function removePushSubscription(endpoint: string): Promise<void> {
     })
     .eq('push_endpoint', endpoint)
 }
+
+// ============================================================
+// LINE ユーザー管理（user_line_ids テーブル）
+// ============================================================
+
+export interface LineUser {
+  line_user_id: string
+  created_at?: string
+}
+
+// LINE userId を保存（友だち追加時）
+export async function saveLineUser(line_user_id: string): Promise<boolean> {
+  if (!supabase) return false
+  const { error } = await supabase
+    .from('user_line_ids')
+    .upsert({ line_user_id }, { onConflict: 'line_user_id' })
+  if (error) console.error('[supabase] saveLineUser error:', error)
+  return !error
+}
+
+// LINE userId を削除（ブロック・友だち解除時）
+export async function removeLineUser(line_user_id: string): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase
+    .from('user_line_ids')
+    .delete()
+    .eq('line_user_id', line_user_id)
+  if (error) console.error('[supabase] removeLineUser error:', error)
+}
+
+// リマインダー送信対象の LINE userId 一覧を取得
+export async function fetchLineUsers(): Promise<string[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('user_line_ids')
+    .select('line_user_id')
+  if (error || !data) {
+    console.error('[supabase] fetchLineUsers error:', error)
+    return []
+  }
+  return data.map((row) => (row as LineUser).line_user_id)
+}

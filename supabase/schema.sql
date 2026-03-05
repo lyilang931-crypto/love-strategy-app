@@ -58,6 +58,29 @@ CREATE INDEX IF NOT EXISTS idx_love_users_push_endpoint
   WHERE push_endpoint IS NOT NULL;
 
 -- ============================================================
+-- user_line_ids テーブル（LINE公式アカウント友だち追加ユーザー管理）
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS user_line_ids (
+  line_user_id TEXT PRIMARY KEY,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- RLS を有効化
+ALTER TABLE user_line_ids ENABLE ROW LEVEL SECURITY;
+
+-- サーバーサイドからの INSERT / DELETE / SELECT を許可
+-- （anon キーを使う場合。より安全にする場合は service_role のみに制限）
+CREATE POLICY "allow_insert_line" ON user_line_ids
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "allow_delete_line" ON user_line_ids
+  FOR DELETE USING (true);
+
+CREATE POLICY "allow_select_line" ON user_line_ids
+  FOR SELECT USING (true);
+
+-- ============================================================
 -- 使い方メモ
 -- ============================================================
 -- 1. Supabase ダッシュボード → SQL Editor でこのファイルを実行
