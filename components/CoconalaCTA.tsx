@@ -42,14 +42,14 @@ export default function CoconalaCTA({ message, url, compact = false }: Props) {
           <p className="text-gray-300 text-sm leading-relaxed mb-4">{message}</p>
         )}
 
-        {/* Guarantee badge */}
+        {/* Feature badge */}
         <div className="glass rounded-2xl p-4 mb-5">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🛡️</span>
+            <span className="text-2xl">🤝</span>
             <div>
-              <p className="text-gold-300 font-bold text-sm">3ヶ月完全返金保証</p>
+              <p className="text-gold-300 font-bold text-sm">AIツール付き・丁寧なフォローアップ</p>
               <p className="text-gray-400 text-xs mt-0.5">
-                AIの指示通りに実践して3ヶ月で変化がなければ、コーチング費用を全額返金。
+                この恋愛戦略AIと組み合わせて、プロコーチが個別に伴走サポートします。
               </p>
             </div>
           </div>

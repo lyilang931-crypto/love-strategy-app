@@ -8,7 +8,7 @@ import CoconalaCTA from '@/components/CoconalaCTA'
 import StreakBadge from '@/components/StreakBadge'
 import NotificationButton from '@/components/NotificationButton'
 
-const COCONALA_URL = process.env.NEXT_PUBLIC_COCONALA_URL || 'https://coconala.com'
+const COCONALA_URL = process.env.NEXT_PUBLIC_COCONALA_URL || 'https://coconala.com/services/4107500'
 
 const WEEK_COLORS = [
   { border: 'border-gold-400/40', bg: 'bg-gold-400/10', text: 'text-gold-300' },

@@ -8,7 +8,7 @@ import CoconalaCTA from '@/components/CoconalaCTA'
 import StreakBadge from '@/components/StreakBadge'
 import NotificationButton from '@/components/NotificationButton'
 
-const COCONALA_URL = process.env.NEXT_PUBLIC_COCONALA_URL || 'https://coconala.com'
+const COCONALA_URL = process.env.NEXT_PUBLIC_COCONALA_URL || 'https://coconala.com/services/4107500'
 
 const MOOD_OPTIONS = [
   { value: 1, label: '😞', desc: '最悪' },
@@ -348,7 +348,7 @@ export default function ProgressPage() {
 
         {/* Coconala CTA */}
         <CoconalaCTA
-          message="着実に記録を重ねているあなたへ。この行動力があれば、プロコーチとの個別セッションで劇的に加速できます。3ヶ月で変化がなければ全額返金。今がそのタイミングかもしれません。"
+          message="着実に記録を重ねているあなたへ。この行動力があれば、プロコーチとの個別セッションで劇的に加速できます。AIツール付き・丁寧なフォローアップで伴走します。"
           url={COCONALA_URL}
         />
 

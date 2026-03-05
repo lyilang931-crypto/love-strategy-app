@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import type { LoveStrategy, HearingData, DiagnosisResult } from '@/lib/types'
 import CoconalaCTA from '@/components/CoconalaCTA'
 
-const COCONALA_URL = process.env.NEXT_PUBLIC_COCONALA_URL || 'https://coconala.com'
+const COCONALA_URL = process.env.NEXT_PUBLIC_COCONALA_URL || 'https://coconala.com/services/4107500'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
