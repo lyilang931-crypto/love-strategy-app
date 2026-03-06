@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 
 const FEATURES = [
   {
@@ -39,21 +39,41 @@ const fadeUp = {
   }),
 }
 
+// Star の型
+interface StarData {
+  id: number
+  size: number
+  x: number
+  y: number
+  dur: number
+  delay: number
+  opacity: number
+}
+
 // Star particle component
+// Math.random() はクライアントサイドの useEffect 内でのみ生成。
+// SSR とクライアントのハイドレーション不一致（Hydration Error）を防ぐため。
 function Stars() {
-  const stars = Array.from({ length: 30 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 2.5 + 0.5,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    dur: Math.random() * 8 + 5,
-    delay: Math.random() * 6,
-    opacity: Math.random() * 0.2 + 0.05,
-  }))
+  const [stars, setStars] = useState<StarData[] | null>(null)
+
+  useEffect(() => {
+    setStars(
+      Array.from({ length: 30 }, (_, i) => ({
+        id: i,
+        size: Math.random() * 2.5 + 0.5,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        dur: Math.random() * 8 + 5,
+        delay: Math.random() * 6,
+        opacity: Math.random() * 0.2 + 0.05,
+      }))
+    )
+  }, [])
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden">
-      {stars.map((s) => (
+      {/* SSR時は stars が null のため何も描画しない（Hydration mismatch 防止）*/}
+      {stars?.map((s) => (
         <div
           key={s.id}
           className="absolute rounded-full bg-gold-400"
@@ -68,7 +88,7 @@ function Stars() {
           }}
         />
       ))}
-      {/* Large glow orbs */}
+      {/* Large glow orbs（固定値なので SSR でも安全）*/}
       <div
         className="absolute w-96 h-96 rounded-full"
         style={{
