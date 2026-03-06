@@ -88,6 +88,12 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true })
 }
 
+// ── LINE Webhook 疎通確認用 GET ハンドラー ──
+// LINE Developers コンソールの「検証」ボタンは GET を送る場合があるため 200 を返す
+export function GET() {
+  return NextResponse.json({ ok: true })
+}
+
 // ── 指定ユーザーへプッシュメッセージを送信 ──
 async function sendReplyOrPush(
   userId: string,

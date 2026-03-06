@@ -116,3 +116,8 @@ export async function POST(req: Request) {
     errors: errors.length > 0 ? errors : undefined,
   })
 }
+
+// Vercel Cron は GET リクエストを送るため、GET も受け付けて POST に委譲する
+export async function GET(req: Request) {
+  return POST(req)
+}
